@@ -12,6 +12,6 @@ int main()
 		}
 	if(4.9==49e-1&&0.49E1==2.45*2.0)puts("yes");
 	putc('\'');
-	puts("pentru \" se foloseste \\\"");	// pentru \n
+	puts("pentru \r\n si tab\t am testat");	// pentru \n
 	return 0;
 }

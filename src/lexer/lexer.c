@@ -255,7 +255,7 @@ void showTokens(const Token *tokens){
 		switch(tk->code){
 			case ID: printf("ID:%s", tk->text); break;
 			case INT: printf("INT:%d", tk->i); break;
-			case DOUBLE: printf("DOUBLE:%f", tk->d); break;
+			case DOUBLE: printf("DOUBLE:%.2f", tk->d); break;
 			case CHAR: printf("CHAR:%c", tk->c); break;
 			case STRING: printf("STRING:%s", tk->text); break;
 			case TYPE_CHAR: printf("TYPE_CHAR"); break;
