@@ -251,7 +251,7 @@ Token *tokenize(const char *pch){
 
 void showTokens(const Token *tokens){
 	for(const Token *tk=tokens; tk; tk=tk->next){
-		printf("%d: ", tk->line);
+		printf("%d \t", tk->line);
 		switch(tk->code){
 			case ID: printf("ID:%s", tk->text); break;
 			case INT: printf("INT:%d", tk->i); break;
