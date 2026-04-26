@@ -1,5 +1,5 @@
 #pragma once
 
-#include "lexer.h"
+#include "../lexer/lexer.h"
 
 void parse(Token *tokens);

@@ -3,6 +3,7 @@
 
 #include "utils/utils.h"
 #include "lexer/lexer.h"
+#include "parser/parser.h"
 
 int main(int argc, char** argv){
 
@@ -12,7 +13,10 @@ int main(int argc, char** argv){
 
     Token* tokens = tokenize(buffer);
 
-    showTokens(tokens);
+    //showTokens(tokens);
+
+    parse(tokens);
+    printf("tot ok\n");
 
     free(buffer);
     return 0;
