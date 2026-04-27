@@ -16,7 +16,6 @@ int main(int argc, char** argv){
     //showTokens(tokens);
 
     parse(tokens);
-    printf("tot ok\n");
 
     free(buffer);
     return 0;

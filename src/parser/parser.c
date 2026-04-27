@@ -49,7 +49,7 @@ void tkerr(const char *fmt,...){
 	exit(EXIT_FAILURE);
 }
 
-/* const char *tkCodeName(int code){
+const char *tkCodeName(int code){
     switch(code){
         case ID: return "ID";
         case TYPE_INT: return "TYPE_INT";
@@ -110,8 +110,8 @@ bool consume(int code){
     printf(" => found %s\n", tkCodeName(iTk->code));
     return false;
 }
-*/
 
+/* 
 bool consume(int code){
     if(iTk->code == code){
         consumedTk = iTk;
@@ -120,10 +120,10 @@ bool consume(int code){
     }
     return false;
 }
-
+ */
 void parse(Token *tokens){
 	iTk=tokens;
-	if(!unit())tkerr("syntax error");
+	if(!unit()) tkerr("syntax error");
 }
 
 // unit: ( structDef | fnDef | varDef )* END
@@ -218,7 +218,7 @@ bool fnDef(){
 				if(fnParam()){
 					while(consume(COMMA)){
 						if(!fnParam()){
-							tkerr("missing function parameter after ,");
+							tkerr("invalid parameter or missing function parameter after ,");
 						}
 					}
 				}
