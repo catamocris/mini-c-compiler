@@ -4,6 +4,7 @@
 #include "utils/utils.h"
 #include "lexer/lexer.h"
 #include "parser/parser.h"
+#include "ad/ad.h"
 
 int main(int argc, char** argv){
 
@@ -15,7 +16,12 @@ int main(int argc, char** argv){
 
     //showTokens(tokens);
 
+    pushDomain();
     parse(tokens);
+    printf("\n");
+    
+    showDomain(symTable, "global");
+    dropDomain();
 
     free(buffer);
     return 0;

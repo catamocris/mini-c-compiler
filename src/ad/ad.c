@@ -84,6 +84,8 @@ void freeSymbol(Symbol *s){
 		case SK_STRUCT:
 			freeSymbols(s->structMembers);
 			break;
+		default:
+			break;
 		}
 	free(s);
 	}

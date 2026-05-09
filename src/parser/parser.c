@@ -4,19 +4,23 @@
 #include <stdbool.h>
 
 #include "parser.h"
+#include "../utils/utils.h"
+#include "../ad/ad.h"
 
 Token *iTk;				// the iterator in the tokens list
 Token *consumedTk;		// the last consumed token
 
+Symbol *owner = NULL;	// current symbol owner
+
 bool unit();
 bool structDef();
 bool varDef();
-bool typeBase();
-bool arrayDecl();
+bool typeBase(Type *t);
+bool arrayDecl(Type *t);
 bool fnDef();
 bool fnParam();
 bool stm();
-bool stmCompound();
+bool stmCompound(bool newDomain);
 
 bool expr();
 bool exprAssign();
@@ -141,14 +145,29 @@ bool unit(){
 }
 
 // structDef: STRUCT ID LACC varDef* RACC SEMICOLON
+// numele structurii trebuie sa fie unic in domeniu
+// in interiorul structurii nu pot exista doua variabile cu acelasi nume
 bool structDef(){
 	Token *start = iTk;
 	if(consume(STRUCT)){
 		if(consume(ID)){
+			Token *tkName = consumedTk;
+
 			if(consume(LACC)){
+				Symbol *s = findSymbolInDomain(symTable, tkName->text);
+				if(s) tkerr("symbol redefinition: %s", tkName->text);
+				s = addSymbolToDomain(symTable, newSymbol(tkName->text, SK_STRUCT));
+				s->type.tb = TB_STRUCT;
+				s->type.s = s;
+				s->type.n = -1;
+				pushDomain();
+				owner = s;
+
 				while(varDef()){}
 				if(consume(RACC)){
 					if(consume(SEMICOLON)){
+						owner = NULL;
+						dropDomain();
 						return true;
 					}else tkerr("missing ; after struct declaration");
 				}else tkerr("missing } after struct declaration");
@@ -160,12 +179,42 @@ bool structDef(){
 }
 
 // varDef: typeBase ID arrayDecl? SEMICOLON
+// numele variabilei trebuie sa fie unic in domeniu
+// variabilele de tip vector trebuie sa aiba dimensiunea data (nu se accepta: int v[])
 bool varDef(){
 	Token *start = iTk;
-	if(typeBase()){
+	Type t;
+	if(typeBase(&t)){
 		if(consume(ID)){
-			if(arrayDecl()){}
+			Token *tkName = consumedTk;
+			
+			if(arrayDecl(&t)){
+				if(t.n == 0) tkerr("a vector variable must have a specified dimension");
+			}
 			if(consume(SEMICOLON)){
+				Symbol *var = findSymbolInDomain(symTable, tkName->text);
+				if(var) tkerr("symbol redefinition: %s", tkName->text);
+				var = newSymbol(tkName->text, SK_VAR);
+				var->type = t;
+				var->owner = owner;
+				addSymbolToDomain(symTable, var);
+
+				if(owner) {
+					switch(owner->kind) {
+						case SK_FN:
+							var->varIdx = symbolsLen(owner->fn.locals);
+							addSymbolToList(&owner->fn.locals, dupSymbol(var));
+							break;
+						case SK_STRUCT:
+							var->varIdx = typeSize(&owner->type);
+							addSymbolToList(&owner->structMembers, dupSymbol(var));
+							break;
+						default:
+							break;
+					}
+				} else {
+					var->varMem = safeAlloc(typeSize(&t));
+				}
 				return true;
 			}else tkerr("missing ; after variable declaration");
 		}else tkerr("missing variable name");
@@ -175,18 +224,27 @@ bool varDef(){
 }
 
 // typeBase: TYPE_INT | TYPE_DOUBLE | TYPE_CHAR | STRUCT ID
-bool typeBase(){
+// daca tipul de baza este o structura, ea trebuie sa fie deja definita anterior
+bool typeBase(Type *t){
+	t->n = -1;
 	if(consume(TYPE_INT)){
+		t->tb = TB_INT;
 		return true;
 	}
 	if(consume(TYPE_DOUBLE)){
+		t->tb = TB_DOUBLE;
 		return true;
 	}
 	if(consume(TYPE_CHAR)){
+		t->tb = TB_CHAR;
 		return true;
 	}
 	if(consume(STRUCT)){
 		if(consume(ID)){
+			Token *tkName = consumedTk;
+			t->tb = TB_STRUCT;
+			t->s = findSymbol(tkName->text);
+			if(!t->s) tkerr("undefined structure: %s", tkName->text);
 			return true;
 		}else tkerr("missing struct name");
 	}
@@ -194,10 +252,15 @@ bool typeBase(){
 }
 
 // arrayDecl: LBRACKET INT? RBRACKET
-bool arrayDecl(){
+bool arrayDecl(Type *t){
 	Token *start = iTk;
 	if(consume(LBRACKET)){
-		if(consume(INT)){}
+		if(consume(INT)){
+			Token *tkSize = consumedTk;
+			t->n = tkSize->i;
+		} else {
+			t->n = 0;
+		}
 		if(consume(RBRACKET)){
 			return true;
 		}else tkerr("missing ] in array declaration");
@@ -208,13 +271,28 @@ bool arrayDecl(){
 
 /* fnDef: ( typeBase | VOID ) ID LPAR 
 		( fnParam ( COMMA fnParam )* )? RPAR stmCompound */
+// numele functiei trebuie sa fie unic in domeniu
+// domeniul local functiei incepe imediat dupa LPAR
+// corpul functiei {...} nu defineste un nou subdomeniu in domeniul local functiei
 bool fnDef(){
 	Token *start = iTk;
-	if(typeBase() || consume(VOID)){
-		if(consume(ID)){
-			if(consume(LPAR)){
+	Type t;
+	if(typeBase(&t) || consume(VOID)){
+		t.tb = TB_VOID;
+		t.n = -1;
 
-				// ( fnParam ( COMMA fnParam )* )?
+		if(consume(ID)){
+			Token *tkName = consumedTk;
+
+			if(consume(LPAR)){
+				Symbol *fn = findSymbolInDomain(symTable, tkName->text);
+				if(fn) tkerr("symbol redefinition: %s", tkName->text);
+				fn = newSymbol(tkName->text, SK_FN);
+				fn->type = t;
+				addSymbolToDomain(symTable, fn);
+				owner = fn;
+				pushDomain();
+
 				if(fnParam()){
 					while(consume(COMMA)){
 						if(!fnParam()){
@@ -224,7 +302,9 @@ bool fnDef(){
 				}
 
 				if(consume(RPAR)){
-					if(stmCompound()){
+					if(stmCompound(false)){
+						dropDomain();
+						owner = NULL;
 						return true;
 					}else tkerr("missing function body");
 				}else tkerr("missing ) after function parameters");
@@ -236,11 +316,28 @@ bool fnDef(){
 }
 
 // fnParam: typeBase ID arrayDecl?
+// numele parametrului trebuie sa fie unic in domeniu
+// parametrii pot fi vectori cu dimensiune data, dar in acest caz li se sterge dimensiunea ( int v[10] -> int v[] )
 bool fnParam(){
 	Token *start = iTk;
-	if(typeBase()){
+	Type t;
+	if(typeBase(&t)){
 		if(consume(ID)){
-			if(arrayDecl()){}
+			Token *tkName = consumedTk;
+
+			if(arrayDecl(&t)){
+				t.n = 0;
+			}
+
+			Symbol *param = findSymbolInDomain(symTable, tkName->text);
+			if(param) tkerr("symbol redefinition: %s", tkName->text);
+			param = newSymbol(tkName->text, SK_PARAM);
+			param->type = t;
+			param->owner = owner;
+			param->paramIdx = symbolsLen(owner->fn.params);
+			// parametrul este adaugat atat la domeniul curent, cat si la parametrii fn
+			addSymbolToDomain(symTable, param);
+			addSymbolToList(&owner->fn.params, dupSymbol(param));
 			return true;
 		}else tkerr("missing parameter name");
 	}
@@ -253,9 +350,10 @@ bool fnParam(){
 		| WHILE LPAR expr RPAR stm
 		| RETURN expr? SEMICOLON
 		| expr? SEMICOLON */
+// corpul compus {...} al instructiunilor defineste un nou domeniu
 bool stm(){
 	Token *start = iTk;
-	if(stmCompound()){
+	if(stmCompound(true)){
 		return true;
 	}
 	if(consume(IF)){
@@ -304,14 +402,17 @@ bool stm(){
 }
 
 // stmCompound:  LACC ( varDef | stm )* RACC
-bool stmCompound(){
+// se defineste un nou domeniu doar la cerere
+bool stmCompound(bool newDomain){
 	if(consume(LACC)){
+		if(newDomain) pushDomain();
 		for(;;){
 			if(varDef()){}
 			else if(stm()){}
 			else break;
 		}
 		if(consume(RACC)){
+			if(newDomain) dropDomain();
 			return true;
 		}else tkerr("missing }");
 	}
@@ -530,11 +631,14 @@ bool exprMulPrim(){
 }
 
 // exprCast: LPAR typeBase arrayDecl? RPAR exprCast | exprUnary
+// deoarece typeBase si arrayDecl au nevoie de un argument, se adauga acesta 
+// t va fi folosit ulterior
 bool exprCast(){
 	Token *start = iTk;
 	if(consume(LPAR)){
-		if(typeBase()){
-			if(arrayDecl()){}
+		Type t;
+		if(typeBase(&t)){
+			if(arrayDecl(&t)){}
 			if(consume(RPAR)){
 				if(exprCast()){
 					return true;
