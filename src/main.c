@@ -18,8 +18,6 @@ int main(int argc, char** argv){
 
     pushDomain();
     parse(tokens);
-    printf("\n");
-    
     showDomain(symTable, "global");
     dropDomain();
 

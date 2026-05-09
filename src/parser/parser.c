@@ -52,7 +52,7 @@ void tkerr(const char *fmt,...){
 	fprintf(stderr,"\n");
 	exit(EXIT_FAILURE);
 }
-
+/* 
 const char *tkCodeName(int code){
     switch(code){
         case ID: return "ID";
@@ -114,8 +114,8 @@ bool consume(int code){
     printf(" => found %s\n", tkCodeName(iTk->code));
     return false;
 }
+ */
 
-/* 
 bool consume(int code){
     if(iTk->code == code){
         consumedTk = iTk;
@@ -124,7 +124,7 @@ bool consume(int code){
     }
     return false;
 }
- */
+
 void parse(Token *tokens){
 	iTk=tokens;
 	if(!unit()) tkerr("syntax error");
