@@ -867,7 +867,7 @@ bool exprPrimary(Ret *r){
 			Symbol *param = s->fn.params;
 			if(expr(&rArg)){
 				if(!param) tkerr("too many arguments in function call");
-				if(!convTo(&rArg.type, &param->type)) tkerr("in call, cannot convert the argument typeto the parameter type");
+				if(!convTo(&rArg.type, &param->type)) tkerr("in call, cannot convert the argument type to the parameter type");
 				param = param->next;
 				while(consume(COMMA)){
 					if(expr(&rArg)){

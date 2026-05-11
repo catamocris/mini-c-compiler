@@ -56,7 +56,7 @@ void testAssign(){
 	// (x + 1) = 10;
 
 	// Destinatia nu trebuie sa fie constanta
-	// 10 = x;
+	// a.text = x;
 
 	// Ambii operanzi trebuie sa fie scalari
 	// x = v;
@@ -71,10 +71,7 @@ void testExprOr(){
 	int y;
 
 	// Ambii operanzi trebuie sa fie scalari si sa nu fie structuri
-	if(x || 1){}
 	// if(v || 1){}
-
-	if(x || y){}
 	// if(a || 1){}
 
 	// Rezultatul este un int
@@ -87,10 +84,7 @@ void testExprAnd(){
 	int y;
 
 	// Ambii operanzi trebuie sa fie scalari si sa nu fie structuri
-	if(x && 1){}
 	// if(v && 1){}
-
-	if(x && y){}
 	// if(a && 1){}
 
 	// Rezultatul este un int
@@ -103,10 +97,7 @@ void testExprEq(){
 	int y;
 
 	// Ambii operanzi trebuie sa fie scalari si sa nu fie structuri
-	if(x == 0){}
 	// if(v == 0){}
-
-	if(x != y){}
 	// if(a != 0){}
 
 	// Rezultatul este un int
@@ -119,11 +110,10 @@ void testExprRel(){
 	int y;
 
 	// Ambii operanzi trebuie sa fie scalari si sa nu fie structuri
-	if(x < 10){}
 	// if(v < 10){}
-
-	if(y >= x){}
 	// if(a <= 0){}
+	// if(v > 10){}
+	// if(a >= 0){}
 
 	// Rezultatul este un int
 	x = (y > 0);
@@ -139,7 +129,7 @@ void testExprAdd(){
 	// x = v + 1;
 
 	x = h(1,2) - y;
-	// x = a + 1;
+	// x = a - 1;
 }
 
 void testExprMul(){
@@ -152,7 +142,7 @@ void testExprMul(){
 	// x = v * 2;
 
 	x = h(1,2) / 2;
-	// x = a * 2;
+	// x = a / 2;
 }
 
 void testExprCast(){
