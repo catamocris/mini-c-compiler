@@ -18,7 +18,7 @@ int main(int argc, char** argv){
 
     pushDomain();
     parse(tokens);
-    showDomain(symTable, "global");
+    //showDomain(symTable, "global");
     dropDomain();
 
     printf("syntax ok\n");
