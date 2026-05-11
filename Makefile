@@ -5,8 +5,8 @@ EXEC = build/compiler
 
 all: $(EXEC)
 
-$(EXEC): build/main.o build/lexer.o build/utils.o build/parser.o build/ad.o
-	$(CC) build/main.o build/lexer.o build/utils.o build/parser.o build/ad.o -o $(EXEC)
+$(EXEC): build/main.o build/lexer.o build/utils.o build/parser.o build/ad.o build/at.o
+	$(CC) build/main.o build/lexer.o build/utils.o build/parser.o build/ad.o build/at.o -o $(EXEC)
 
 build/main.o: src/main.c
 	mkdir -p build
@@ -28,8 +28,12 @@ build/ad.o: src/ad/ad.c
 	mkdir -p build
 	$(CC) $(CFLAGS) -c src/ad/ad.c -o build/ad.o
 
+build/at.o: src/at/at.c
+	mkdir -p build
+	$(CC) $(CFLAGS) -c src/at/at.c -o build/at.o
+
 run: all
-	./$(EXEC) tests/testad.c
+	./$(EXEC) tests/testat.c
 
 clean:
 	rm -rf build

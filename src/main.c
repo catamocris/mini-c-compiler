@@ -21,6 +21,8 @@ int main(int argc, char** argv){
     showDomain(symTable, "global");
     dropDomain();
 
+    printf("syntax ok\n");
+
     free(buffer);
     return 0;
 }
