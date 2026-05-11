@@ -278,9 +278,10 @@ bool fnDef(){
 	Token *start = iTk;
 	Type t;
 	if(typeBase(&t) || consume(VOID)){
-		t.tb = TB_VOID;
-		t.n = -1;
-
+		if(consumedTk->code == VOID){
+			t.tb = TB_VOID;
+			t.n = -1;
+		}
 		if(consume(ID)){
 			Token *tkName = consumedTk;
 
