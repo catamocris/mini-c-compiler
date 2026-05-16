@@ -1,7 +1,6 @@
 #pragma once
 
-// #include "vm.h"
-typedef struct Instr Instr;
+#include "../vm/vm.h"
 
 // the domain analysis
 
